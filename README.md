@@ -5,11 +5,14 @@ Awesome! So you want to get started with ML in Flux? Let's dive in!
 
 Steps: 
 
-Prerequesites: InfluxDB 2.0 (local or Cloud instance), this repo
+Prerequesites: InfluxDB 2.0 (local or Cloud instance), this repo (includes zoo-data.csv, script.py and naiveBayesClassifier.flux) 
 InfluxDB: https://github.com/influxdata/influxdb
 
 1) Ensure you have InfluxDB 2.0 set up by either going to localhost:9999 (if you `make` InfluxDB from source) or going to your Cloud instance on AWS, Azure, etc. Keep the instance running throughout this demo.  
 2) Choose a binary dataset (fields can only take on 2 unique values) or visit https://archive.ics.uci.edu/ml/datasets.php for some wonderful datasets you can get started with. 
+
+![](images/csvData.png)
+
 3) You will have to make edits to script.py in the following areas: 
 
 - Set `mydata` equal to the file path of your dataset 
@@ -18,6 +21,8 @@ InfluxDB: https://github.com/influxdata/influxdb
 - Set `dataframe_measurement_name` to be the name of your dataset. 
 - Note which fields you want to use as actual fields you classify on and which you would like to use for Class. Recall we predict `P(Class | field)`.
 - Anything you choose to be a class must be listed inside of `data_frame_tag_columns` and everything else defaults to a `field`. Finally, run the script. You've just written your dataset to an InfluxDB bucket. 
+
+![](images/pythonScript.png)
 
 Note: In our demo, we've divided training and test data based on time: 3 days for training and 1 day for testing. 
 
@@ -29,6 +34,10 @@ Note: For ease of use and debugging, use the Flux extension in VSCode. https://m
 6) That's it! Hit `Submit` and watch the predictions show up under the `Probability` column. What is this predicting? This classifier predicts the probability that a given animal is airborne given whether it is aquatic or not. 
 
 If you are using my zoo data, feel free to play around with this by changing the field or Class to any of the other available fields in the dataset. You can also change the time frames of the training and test data based on your dataset.
+
+![](images/overview.png)
+
+![](images/data.png)
 
 Coming very soon:
 
