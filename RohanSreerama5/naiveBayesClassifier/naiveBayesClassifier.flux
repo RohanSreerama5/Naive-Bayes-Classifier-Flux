@@ -1,5 +1,5 @@
 //Final working code as of August 11, 2020
-//Currently supports single field classification and binary data sets 
+//Currently supports single field classification and binary data sets.
 
 import "system"
 
