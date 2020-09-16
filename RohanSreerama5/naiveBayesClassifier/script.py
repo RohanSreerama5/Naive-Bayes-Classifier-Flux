@@ -11,7 +11,7 @@ import pandas as pd
 # In[71]:
 
 
-mydata = pd.read_csv("~/Downloads/zoo_data.csv")
+mydata = pd.read_csv("zoo_data.csv")
 
 
 # In[72]:
@@ -45,9 +45,9 @@ mydata.tail()
 # In[76]:
 
 
-token = "myToken"
-bucket = "myBucketName"
-org = "myOrgName"
+token = "UQrVJ9uAC8CZbT79IgegEsvyEb5G-aj7lRfyOeGPeQwKIZTwSVFse93DVdBRsXWRZFpJbRbUC8pxN6Np8diPFQ=="
+bucket = "BucketForToday"
+org = "hackathonDemoOrg"
 
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS

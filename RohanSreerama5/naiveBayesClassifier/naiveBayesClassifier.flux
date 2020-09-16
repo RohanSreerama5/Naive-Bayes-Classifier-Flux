@@ -1,19 +1,20 @@
 //Final working code as of August 11, 2020
-//Currently supports single field classification and binary data sets.
+//Currently supports single field classification and binary data sets 
+//Please ensure Ruby is installed
+
+package naiveBayesClassifier
 
 import "system"
 
-naiveBayes = (myClass, myBucket, myField, myMeasurement) => {
-
-training_data = 
-  from(bucket: myBucket)
+naiveBayes = (tables=<-, myClass, myField, myMeasurement) => {
+ 
+training_data = tables
   |> range(start:2020-01-02T00:00:00Z, stop: 2020-01-06T23:00:00Z) //data for 3 days 
-  |> filter(fn: (r) => r["_measurement"] == "zoo-data" and r["_field"] == myField)
+  |> filter(fn: (r) => r["_measurement"] == myMeasurement and r["_field"] == myField)
   |> group()
   //|> yield(name: "trainingData")
 
-test_data = 
-  from(bucket: myBucket)
+test_data = tables
   |> range(start:2020-01-01T00:00:00Z, stop: 2020-01-01T23:00:00Z) //data for 1 day
   |> filter(fn: (r) => r["_measurement"] == myMeasurement and r["_field"] == myField)
   |> group()
@@ -24,12 +25,10 @@ r = training_data
 	|> group(columns: ["_field"])
 	|> count()
 	|> tableFind(fn: (key) =>
-  // changed "f1" to "aquatic"
 		(key._field == myField))
 r2 = getRecord(table: r, idx: 0)
 total_count = r2._value
 P_Class_k = training_data
-  // changed class to myClass
 	|> group(columns: [myClass, "_field"])
 	|> count()
 	|> map(fn: (r) =>
@@ -39,24 +38,19 @@ P_Class_k = training_data
 //one table for each class, where r.p_k == P(Class_k)
 P_value_x = training_data
 	|> group(columns: ["_value", "_field"])
-  //changed class to myClass
 	|> count(column: myClass)
 	|> map(fn: (r) =>
-  //changed class to myClass
 		({r with p_x: float(v: r.airborne) / float(v: total_count), tc: total_count}))
 
 // one table for each value, where r.p_x == P(value_x)
 P_k_x = training_data
-//changed class to myClass
 	|> group(columns: ["_field","_value", myClass])
 	|> reduce(fn: (r, accumulator) =>
 		({sum: 1.0 + accumulator.sum}), identity: {sum: 0.0})
 	|> group()
 
 // one table for each value and Class pair, where r.p_k_x == P(value_x | Class_k)
-//changed class to myClass
 P_k_x_class = join(tables: {P_k_x: P_k_x, P_Class_k: P_Class_k}, on: [myClass], method: "inner")
-    //changed class to myClass
     |> group(columns: [myClass, "_value_P_k_x"])
 	  |> limit(n: 1)
 
@@ -64,10 +58,9 @@ P_k_x_class = join(tables: {P_k_x: P_k_x, P_Class_k: P_Class_k}, on: [myClass], 
 		  ({r with P_x_k: r.sum / float(v: r._value_P_Class_k)}))
     |> drop(columns: ["_field_P_Class_k", "_value_P_Class_k"])
     |> rename(columns: {_field_P_k_x: "_field", _value_P_k_x: "_value"})
-//changed class to myClass
+
 P_k_x_class_Drop = join(tables: {P_k_x: P_k_x, P_Class_k: P_Class_k}, on: [myClass], method: "inner")
     |> drop(columns: ["_field_P_Class_k", "_value_P_Class_k", "_field_P_k_x"])
-    //changed class to myClass
     |> group(columns: [myClass, "_value_P_k_x"])
 	|> limit(n: 1)
 
@@ -81,25 +74,16 @@ Probability_table = join(tables: {P_k_x_class: P_k_x_class, P_value_x: P_value_x
 		({r with Probability: r.P_x_k * r.p_k / r.p_x}))
 	
  	//|> yield(name: "final")
-// added P(Class_k) to table and calculated each probability
-// predictRecord = (x) => {
-//   return Probability_table |> filter(fn: (r) => r._value == x._value)
-//   |> max(column: "Probability")
-// }
 
 //predictions for test data computed 
 predictOverall = (tables=<-) => {
   r = tables
     |> keep(columns: ["_value", "Animal_name","_field"])
-	//|> yield(name: "r")
+
   output = join(tables: {Probability_table: Probability_table, r: r}, on: ["_value"], method: "inner")
   return output 
 }
 
-test_data |> predictOverall() |> yield(name: "MAIN")
-
-return 0 
+return test_data |> predictOverall() 
 
 }
-
-naiveBayes(myClass: "airborne", myBucket: "TestBucketNaiveBayes", myField: "aquatic", myMeasurement: "zoo-data")
